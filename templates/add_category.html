@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Category</title>
+</head>
+
+<body>
+    <h1>Add Category</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.name.label }} {{ form.name }}
+        {{ form.submit }}
+    </form>
+</body>
+</html>

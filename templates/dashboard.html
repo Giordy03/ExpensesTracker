@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ current_user.username }}!</h1>
+    <a href="{{ url_for('add_category') }}">Add Category</a><br>
+    <a href="{{ url_for('add_expense') }}">Add Expense</a><br>
+    <a href="{{ url_for('expenses_view') }}">View Expenses</a>
+</body>
+</html>
