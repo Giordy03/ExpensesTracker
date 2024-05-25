@@ -5,6 +5,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
+import json
+import os
 
 app = Flask(__name__)
 
@@ -17,11 +19,6 @@ db = SQLAlchemy(app)        # creates database instance
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-
-# In-memory data structures
-expenses = {}
-categories = {}
 
 
 @login_manager.user_loader
@@ -57,6 +54,37 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Login")
 
 
+def write_expenses_file():
+    with open("expenses.json", "w") as file:
+        json.dump(expenses, file)
+    
+    
+def write_categories_file():
+    with open("categories.json", "w") as file:
+        json.dump(categories, file)
+        
+        
+def read_expenses_file():
+    if os.path.exists("expenses.json"):
+        with open("expenses.json", "r") as file:
+            return json.load(file)
+    else:
+        return {}
+    
+
+def read_categories_file():
+    if os.path.exists("categories.json"):
+        with open("categories.json", "r") as file:
+            return json.load(file)
+    else:
+        return {}
+
+
+# Initialize expenses and categories from files
+expenses = read_expenses_file()
+categories = read_categories_file()
+
+
 class CategoryForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=1, max=50)], render_kw={"placeholder": "Category Name"})
     submit = SubmitField("Add Category")
@@ -64,8 +92,7 @@ class CategoryForm(FlaskForm):
 
 class ExpenseForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
-    description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
-                              render_kw={"placeholder": "Description"})
+    description = StringField(validators=[InputRequired(), Length(min=1, max=100)], render_kw={"placeholder": "Description"})
     category = SelectField("Category", choices=[], validators=[InputRequired()])
     submit = SubmitField("Add Expense")
 
@@ -119,18 +146,21 @@ def register():
 @login_required
 def add_category():
     form = CategoryForm()
+    existing_categories = categories.get(current_user.id, [])
     if form.validate_on_submit():
         if current_user.id not in categories:
             categories[current_user.id] = []
         categories[current_user.id].append(form.name.data)
+        write_categories_file()
         return redirect(url_for("dashboard"))
-    return render_template("add_category.html", form=form)
+    return render_template("add_category.html", form=form, existing_categories=existing_categories)
 
 
 @app.route("/add_expense", methods=["GET", "POST"])
 @login_required
 def add_expense():
     form = ExpenseForm()
+    form.category.choices = [(cat, cat) for cat in categories.get(current_user.id, [])]
     if form.validate_on_submit():
         if current_user.id not in expenses:
             expenses[current_user.id] = []
@@ -140,6 +170,7 @@ def add_expense():
             'category': form.category.data
         }
         expenses[current_user.id].append(expense_data)
+        write_expenses_file()
         return redirect(url_for("dashboard"))
     return render_template("add_expense.html", form=form)
 
