@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Budget</title>
+</head>
+<body>
+    <h1>Budget</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div>{{ form.budget.label }}</div>
+        <div>{{ form.budget }}</div>
+        <div>{{ form.submit }}</div>
+    </form>
+    <ul> <li>{{ user_budget }}</li></ul>
+    <h2>Total expenses by month</h2>
+    <ul>
+        {% for month, expense in monthly_expenses.items() %}
+            <li>{{ month }}: {{ expense }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+</body>
+</html>

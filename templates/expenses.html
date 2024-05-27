@@ -8,7 +8,13 @@
     <h1>Expenses</h1>
     <ul>
         {% for expense in expenses %}
-        <li>{{ expense.amount }} - {{ expense.description }} ({{ expense.category }})</li>
+        <li>
+            {{ expense.date }}: {{ expense.amount }} - {{ expense.description }} ({{ expense.category }})
+            <form method="POST" style="display: inline;">
+               <input type="hidden" name="delete" value="{{ expense.id }}">
+                    <button type="submit">Delete</button>
+                </form>
+        </li>
         {% endfor %}
     </ul>
 <a href="{{ url_for('dashboard') }}">Dashboard</a>

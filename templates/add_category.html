@@ -8,8 +8,14 @@
     <h1>Add Category</h1>
 
     <ul>
-        {% for category in existing_categories %}
-            <li> {{ category }} </li>
+        {% for category in categories %}
+            <li>
+                {{ category }}
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="delete" value="{{ category }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
         {% endfor %}
     </ul>
 
@@ -18,6 +24,7 @@
         {{ form.name.label }} {{ form.name }}
         {{ form.submit }}
     </form>
+
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
 </body>
 </html>
