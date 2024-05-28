@@ -12,14 +12,19 @@
         <div>{{ form.budget }}</div>
         <div>{{ form.submit }}</div>
     </form>
-    <ul> <li>{{ user_budget }}</li></ul>
+    <ul> Your monthly budget is currently set to: <b>{{ user_budget }}¥</b></ul>
     <h2>Total expenses by month</h2>
     <ul>
         {% for month, expense in monthly_expenses.items() %}
             <li>
                 {{ month }}: {{ expense }}¥ ---
-                {% if remaining_budget[month] >= 0 %} remaining budget: {{ "%.2f" | format(remaining_budget[month]) }}¥
-                {% else %} overspent:{{ "%.2f" | format(remaining_budget[month]) | absolute }}¥
+                {% if remaining_budget[month] >= 0 %}
+                    remaining budget: <b>{{ "%.2f" | format(remaining_budget[month]) }}¥</b>
+                {% else %} overspent: <b>{{ "%.2f" | format(remaining_budget[month]) | absolute }}¥</b>
+                {% endif %}
+                {% if month == current_month  %}
+                    <p>Average expense per day to remain in the monthly budget:
+                        {{ "%.2f" | format(expense_remaining_days) }}¥</p>
                 {% endif %}
             </li>
         {% endfor %}

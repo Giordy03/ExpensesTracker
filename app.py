@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 import json
 import os
 from datetime import datetime
+from calendar import monthrange
 
 app = Flask(__name__)
 
@@ -222,9 +223,13 @@ def manage_budget():
         return redirect(url_for("manage_budget"))
     else:
         user_budget = budgets.get(str(current_user.id), 0)
-        monthly_expenses, remaining_budget = calculate_monthly_expenses(str(current_user.id))
+        monthly_expenses, remaining_budget, average_expense_remaining_days = \
+            calculate_monthly_expenses(str(current_user.id))
+        current_date = f"{datetime.now().month}-{datetime.now().year}"
+        print(f"current month: {current_date}")
         return render_template("budget.html", form=form, user_budget=user_budget, monthly_expenses=monthly_expenses,
-                               remaining_budget=remaining_budget)
+                               remaining_budget=remaining_budget, expense_remaining_days=average_expense_remaining_days,
+                               current_month=current_date)
     
     
 def calculate_monthly_expenses(user_id):
@@ -240,7 +245,13 @@ def calculate_monthly_expenses(user_id):
             monthly_expenses[key] = 0
         monthly_expenses[key] += float(expense["amount"])
     remaining_budget = {key: user_budget - total for key, total in monthly_expenses.items()}
-    return monthly_expenses, remaining_budget
+    today = datetime.now()
+    last_day_of_month = monthrange(today.year, today.month)[1]
+    days_remaining = last_day_of_month - today.day + 1
+    print(f"remaining days: {days_remaining}")
+    total_remaining_budget = remaining_budget.get(f"{datetime.now().month}-{datetime.now().year}", 0)
+    average_expense_per_day = total_remaining_budget / days_remaining if days_remaining > 0 else 0
+    return monthly_expenses, remaining_budget, average_expense_per_day
 
 
 @app.template_filter("absolute")
