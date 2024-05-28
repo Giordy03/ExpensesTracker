@@ -226,10 +226,18 @@ def manage_budget():
         monthly_expenses, remaining_budget, average_expense_remaining_days = \
             calculate_monthly_expenses(str(current_user.id))
         current_date = f"{datetime.now().month}-{datetime.now().year}"
-        print(f"current month: {current_date}")
+        average_daily_expense = dict()
+        for date, expense in monthly_expenses.items():
+            month, year = map(int, date.split("-"))
+            print(f"year: {year} - month{month}")
+            if date != current_date:
+                days_in_month = monthrange(year, month)[1]
+            else:
+                days_in_month = datetime.now().day
+            average_daily_expense[date] = expense / days_in_month
         return render_template("budget.html", form=form, user_budget=user_budget, monthly_expenses=monthly_expenses,
                                remaining_budget=remaining_budget, expense_remaining_days=average_expense_remaining_days,
-                               current_month=current_date)
+                               current_month=current_date, average_daily_expense=average_daily_expense)
     
     
 def calculate_monthly_expenses(user_id):
@@ -248,7 +256,6 @@ def calculate_monthly_expenses(user_id):
     today = datetime.now()
     last_day_of_month = monthrange(today.year, today.month)[1]
     days_remaining = last_day_of_month - today.day + 1
-    print(f"remaining days: {days_remaining}")
     total_remaining_budget = remaining_budget.get(f"{datetime.now().month}-{datetime.now().year}", 0)
     average_expense_per_day = total_remaining_budget / days_remaining if days_remaining > 0 else 0
     return monthly_expenses, remaining_budget, average_expense_per_day
