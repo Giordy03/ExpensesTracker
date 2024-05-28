@@ -16,7 +16,12 @@
     <h2>Total expenses by month</h2>
     <ul>
         {% for month, expense in monthly_expenses.items() %}
-            <li>{{ month }}: {{ expense }}</li>
+            <li>
+                {{ month }}: {{ expense }}¥ ---
+                {% if remaining_budget[month] >= 0 %} remaining budget: {{ "%.2f" | format(remaining_budget[month]) }}¥
+                {% else %} overspent:{{ "%.2f" | format(remaining_budget[month]) | absolute }}¥
+                {% endif %}
+            </li>
         {% endfor %}
     </ul>
     <a href="{{ url_for('dashboard') }}">Dashboard</a>

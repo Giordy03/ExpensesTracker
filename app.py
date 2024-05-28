@@ -3,7 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, DateField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import InputRequired, Length, ValidationError, Optional
 from flask_bcrypt import Bcrypt
 import json
 import os
@@ -83,6 +83,13 @@ class BudgetForm(FlaskForm):
     budget = StringField(validators=[InputRequired()], render_kw={"placeholder": "Budget"})
     submit = SubmitField("Set budget")
     
+    
+class FilterForm(FlaskForm):
+    category = SelectField("Category", choices=[("None", "None")], validators=[Optional()])
+    start_date = DateField("Start date", format="%Y-%m-%d", validators=[Optional()])
+    end_date = DateField("End date", format="%Y-%m-%d", validators=[Optional()])
+    submit = SubmitField("Filter")
+
     
 @login_manager.user_loader
 def load_user(user_id):
@@ -179,15 +186,28 @@ def add_expense():
 @app.route("/expenses", methods=["GET", "POST"])
 @login_required
 def expenses_view():
+    form = FilterForm()
+    form.category.choices = [("None", "None")] + [(cat, cat) for cat in categories.get(str(current_user.id), [])]
     user_expenses = expenses.get(str(current_user.id), [])
+    if form.validate_on_submit():
+        filer_category = form.category.data
+        filter_start_date = form.start_date.data
+        filter_end_date = form.end_date.data
+        if filer_category and filer_category != "None":
+            user_expenses = [expense for expense in user_expenses if expense["category"] == filer_category]
+        if filter_start_date:
+            user_expenses = [expense for expense in user_expenses
+                             if datetime.strptime(expense["date"], "%Y-%m-%d").date() >= filter_start_date]
+        if filter_end_date:
+            user_expenses = [expense for expense in user_expenses
+                             if datetime.strptime(expense["date"], "%Y-%m-%d").date() <= filter_end_date]
     if request.method == "POST" and "delete" in request.form:
         expense_id_to_delete = int(request.form.get("delete"))
         user_expenses = [expense for expense in user_expenses if expense[id] != expense_id_to_delete]
         expenses[str(current_user.id)] = user_expenses
-        print("ciao" + user_expenses)
         write_to_file(EXPENSES_FILE, user_expenses)
         flash(f"The expense has been deleted successfully")
-    return render_template("expenses.html", expenses=user_expenses)
+    return render_template("expenses.html", form=form, expenses=user_expenses)
 
 
 @app.route("/budget", methods=["GET", "POST"])
@@ -202,13 +222,15 @@ def manage_budget():
         return redirect(url_for("manage_budget"))
     else:
         user_budget = budgets.get(str(current_user.id), 0)
-        monthly_expenses = calculate_monthly_expenses(str(current_user.id))
-        return render_template("budget.html", form=form, user_budget=user_budget, monthly_expenses=monthly_expenses)
+        monthly_expenses, remaining_budget = calculate_monthly_expenses(str(current_user.id))
+        return render_template("budget.html", form=form, user_budget=user_budget, monthly_expenses=monthly_expenses,
+                               remaining_budget=remaining_budget)
     
     
 def calculate_monthly_expenses(user_id):
     monthly_expenses = dict()
     user_expenses = expenses.get(user_id, [])
+    user_budget = budgets.get(str(user_id), 0)
     for expense in user_expenses:
         expense_date = datetime.strptime(expense["date"], "%Y-%m-%d")
         month = expense_date.month
@@ -217,7 +239,13 @@ def calculate_monthly_expenses(user_id):
         if key not in monthly_expenses:
             monthly_expenses[key] = 0
         monthly_expenses[key] += float(expense["amount"])
-    return monthly_expenses
+    remaining_budget = {key: user_budget - total for key, total in monthly_expenses.items()}
+    return monthly_expenses, remaining_budget
+
+
+@app.template_filter("absolute")
+def absolute(value):
+    return abs(float(value))
 
 
 if __name__ == "__main__":
