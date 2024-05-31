@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Income</title>
+</head>
+<body>
+    <h1>Income</h1>
+
+    <h2>Add income</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        {{ form.amount.label }} {{ form.amount }}
+        {{ form.currency.label }} {{ form.currency }}
+        {{ form.description.label }} {{ form.description }}
+        {{ form.date.label }} {{ form.date(class="datepicker", placeholder="DD-MM-YYYY") }}
+        {{ form.submit }}
+    </form>
+
+    <h2>Income history</h2>
+    <ul>
+        {% for transaction in income %}
+        <li>
+            {{ transaction.date }}: {{ transaction.amount }}{{ transaction.currency }} --- {{ transaction.description }}
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+</body>
+</html>

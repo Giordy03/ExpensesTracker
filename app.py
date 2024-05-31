@@ -201,7 +201,7 @@ def add_expense():
     form.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
     if form.validate_on_submit():
         if str(current_user.id) not in expenses:
-            expenses[str(current_user.id)] = []
+            expenses[str(current_user.id)] = list()
         expense_data = {
             "id": len(expenses[str(current_user.id)]) + 1,
             "amount": form.amount.data,
@@ -243,6 +243,29 @@ def expenses_view():
         write_to_file(EXPENSES_FILE, user_expenses)
         flash(f"The expense has been deleted successfully")
     return render_template("expenses.html", form=form, expenses=user_expenses)
+
+
+@app.route("/income", methods=["GET", "POST"])
+@login_required
+def income_manager():
+    form = IncomeForm()
+    form.currency.choices = [(curr, curr) for curr in possible_currency]
+    if form.validate_on_submit():
+        if str(current_user.id) not in income:
+            income[str(current_user.id)] = list()
+        income_data = {
+            "amount": form.amount.data,
+            "currency": form.currency.data,
+            "description": form.description.data,
+            "date": form.date.data.strftime("%Y-%m-%d")
+        }
+        income[str(current_user.id)].append(income_data)
+        write_to_file(INCOME_FILE, income)
+        return redirect(url_for("dashboard"))
+    else:
+        print(form.errors)
+        user_income = income.get(str(current_user.id), list())
+        return render_template("income.html", form=form, income=user_income)
 
 
 @app.route("/budget", methods=["GET", "POST"])
