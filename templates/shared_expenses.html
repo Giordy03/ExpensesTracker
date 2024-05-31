@@ -1,0 +1,82 @@
+<!-- shared_expenses.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Expenses</title>
+</head>
+<body>
+    <h1>Manage Shared Expenses</h1>
+
+    <h2>Add Friend</h2>
+    <form method="POST">
+        {{ form_friends.hidden_tag() }}
+        {{ form_friends.friends.label }} {{ form_friends.friends }}
+        {{ form_friends.submit() }}
+    </form>
+
+    <ul>
+        {% for friend in friends %}
+        <li>
+            {{ friend }}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add Shared Expense</h2>
+    <form method="POST">
+        {{ form_expenses.hidden_tag() }}
+        {{ form_expenses.amount.label }} {{ form_expenses.amount }}
+        {{ form_expenses.currency.label }} {{ form_expenses.currency() }}
+        {{ form_expenses.date.label }} {{ form_expenses.date() }}
+        {{ form_expenses.category.label }} {{ form_expenses.category() }}
+        {{ form_expenses.paid_by.label }} {{ form_expenses.paid_by() }}
+        {{ form_expenses.submit() }}
+    </form>
+
+    <ul>
+        {% for expense in shared_expenses %}
+            {% if "friend" not in expense %}
+                <li>
+                    {{ expense.date }}: {{ expense.amount }}{{ expense.currency }} -- ({{ expense.category }}):
+                    Paid by <b>{{ expense.paid_by }}</b>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <h2>Total expenses for each friend</h2>
+    <ul>
+        {% for friend, total in friend_total.items() %}
+        <li>{{ friend }} has paid {{ total }} in total</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Balance</h2>
+    <ul>
+        {% for friend, total in balance.items() %}
+        <li>
+            {% if total > 0 %} {{ friend }} needs to give {{ "%.2f" | format(total) }}
+            {% elif total == 0 %} {{ friend }} is okay with the expenses
+            {% else %} {{ friend }} needs to receive {{ "%.2f" | format(total) | absolute }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Settlement</h2>
+    <ul>
+        {% for payer, payee, amount in transactions %}
+        <li>
+            {{ payer }} needs to pay {{ payee }}: {{ amount }}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <form method="POST" action="{{ url_for('clear_shared_expenses') }}">
+        <button type="submit">Clear everything</button>
+    </form>
+
+</body>
+</html>
