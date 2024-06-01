@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Budget</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='budget.css') }}">
 </head>
+
 <body>
-    <h1>Budget</h1>
+    <div class="container">
+    <h1>Set budget</h1>
     <form method="post">
         {{ form.hidden_tag() }}
         <div>{{ form.budget.label }}</div>
         <div>{{ form.budget }}</div>
         <div>{{ form.submit }}</div>
     </form>
+
     <ul> Your monthly budget is currently set to: <b>{{ user_budget }}¥</b></ul>
+
     <h2>Total expenses by month</h2>
     <ul>
         {% for month, expense in monthly_expenses.items() %}
@@ -22,7 +27,7 @@
                     remaining budget: <b>{{ "%.2f" | format(remaining_budget[month]) }}¥</b><br>
                 {% else %} overspent: <b>{{ "%.2f" | format(remaining_budget[month]) | absolute }}¥</b><br>
                 {% endif %}
-                Average expense per dey: {{ "%.2f" | format(average_daily_expense[month]) }}¥<br>
+                Average expense per day: {{ "%.2f" | format(average_daily_expense[month]) }}¥<br>
                 {% if month == current_month  %}
                     Average expense per day to remain in the monthly budget:
                         {{ "%.2f" | format(expense_remaining_days) }}¥<br>
@@ -30,6 +35,9 @@
             </li>
         {% endfor %}
     </ul>
+
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+    </div>
 </body>
 </html>

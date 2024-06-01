@@ -5,7 +5,29 @@
     <title>Add Expense</title>
 </head>
 <body>
-    <h1>Add Expense</h1>
+    <h1>Categories</h1>
+    <h2>Existing categories</h2>
+    <ul>
+        {% for category in categories %}
+            <li>
+                {{ category }}
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="delete" value="{{ category }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add category</h2>
+    <form method="POST">
+        {{ form_cat.hidden_tag() }}
+        {{ form_cat.name.label }} {{ form_cat.name }}
+        {{ form_cat.submit }}
+    </form>
+
+    <h1>Expenses</h1>
+    <h2>Add expense</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
         {{ form.amount.label }} {{ form.amount }}¥

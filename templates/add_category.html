@@ -20,9 +20,9 @@
     </ul>
 
     <form method="POST">
-        {{ form.hidden_tag() }}
-        {{ form.name.label }} {{ form.name }}
-        {{ form.submit }}
+        {{ form_cat.hidden_tag() }}
+        {{ form_cat.name.label }} {{ form_cat.name }}
+        {{ form_cat.submit }}
     </form>
 
     <a href="{{ url_for('dashboard') }}">Dashboard</a>

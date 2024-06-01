@@ -4,12 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='home.css')  }}">
 </head>
 
 <body>
-    <h1>Web application, communication networks final project</h1>
-    <a href="{{ url_for('login') }}">Login Page</a><br>
-    <a href="{{ url_for('register') }}">Register Page</a><br>
+    <div class="container">
+        <h1>Expenses tracker</h1>
+        <a href="{{ url_for('login') }}">Login Page</a><br>
+        <a href="{{ url_for('register') }}">Register Page</a><br>
+        <h4>Web application, communication networks final project</h4>
+    </div>
 </body>
 
 </html>

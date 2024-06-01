@@ -116,8 +116,29 @@ def login():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    user_id = str(current_user.id)
+    monthly_expenses, remaining_budget, average_expense_remaining_days = calculate_monthly_expenses(user_id)
+    current_month = f"{datetime.now().month}-{datetime.now().year}"
+    if current_month in remaining_budget.keys():
+        remaining_budget = remaining_budget[current_month]
+    else:
+        remaining_budget = budgets[user_id]
+        today = datetime.now()
+        last_day_of_month = monthrange(today.year, today.month)[1]
+        days_remaining = last_day_of_month - today.day + 1
+        average_expense_remaining_days = remaining_budget / days_remaining
+    # user_income = sum([float(inc["amount"]) for inc in income.get(user_id, [])])
+    user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, [])])
+    user_budget = budgets.get(user_id, 0)
+    # return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
+    #                        user_budget=user_budget, monthly_expenses=monthly_expenses,
+    #                        remaining_budget=remaining_budget,
+    #                        average_expense_remaining_days=average_expense_remaining_days)
 
+    return render_template("dashboard.html", user_expenses=user_expenses,
+                           user_budget=user_budget, monthly_expenses=monthly_expenses,
+                           remaining_budget=remaining_budget,
+                           average_expense_remaining_days=average_expense_remaining_days)
 
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
@@ -141,10 +162,10 @@ def register():
 @app.route("/add_category", methods=["GET", "POST"])
 @login_required
 def add_category():
-    form = CategoryForm()
+    form_category = CategoryForm()
     existing_categories = categories.get(str(current_user.id), [])
-    if form.validate_on_submit():
-        new_category = form.name.data
+    if form_category.validate_on_submit():
+        new_category = form_category.name.data
         if str(current_user.id) not in categories:
             categories[str(current_user.id)] = []
         categories[str(current_user.id)].append(new_category)
@@ -160,14 +181,34 @@ def add_category():
             write_to_file(CATEGORIES_FILE, categories)
             flash(f"Category {category_to_delete} has been deleted successfully")
             
-    return render_template("add_category.html", form=form, categories=existing_categories)
+    return render_template("add_category.html", form_cat=form_category, categories=existing_categories)
 
 
 @app.route("/add_expense", methods=["GET", "POST"])
 @login_required
 def add_expense():
+    form_category = CategoryForm()
+    existing_categories = categories.get(str(current_user.id), [])
     form = ExpenseForm()
     form.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
+    if form_category.validate_on_submit():
+        new_category = form_category.name.data
+        if str(current_user.id) not in categories:
+            categories[str(current_user.id)] = []
+        categories[str(current_user.id)].append(new_category)
+        write_to_file(CATEGORIES_FILE, categories)
+        flash(f"Category '{new_category}' added successfully!")
+        return redirect(url_for("add_category"))
+    
+    if request.method == "POST" and "delete" in request.form:
+        category_to_delete = request.form.get("delete")
+        if category_to_delete in existing_categories:
+            existing_categories.remove(category_to_delete)
+            categories[str(current_user.id)] = existing_categories
+            write_to_file(CATEGORIES_FILE, categories)
+            flash(f"Category {category_to_delete} has been deleted successfully")
+        return render_template("add_expense.html", form=form, form_cat=form_category, categories=existing_categories)
+    
     if form.validate_on_submit():
         if str(current_user.id) not in expenses:
             expenses[str(current_user.id)] = []
@@ -181,7 +222,7 @@ def add_expense():
         expenses[str(current_user.id)].append(expense_data)
         write_to_file(EXPENSES_FILE, expenses)
         return redirect(url_for("dashboard"))
-    return render_template("add_expense.html", form=form)
+    return render_template("add_expense.html", form=form, form_cat=form_category, categories=existing_categories)
 
 
 @app.route("/expenses", methods=["GET", "POST"])
