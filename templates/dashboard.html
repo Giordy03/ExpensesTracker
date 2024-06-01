@@ -13,9 +13,11 @@
     <p>Remaining Budget: {{ "%.2f" | format(remaining_budget) }}</p>
     <p>Average Daily Expense to Stay Under Budget: {{ "%.2f" | format(average_expense_remaining_days) }}</p>
     <a href="{{ url_for('add_category') }}">Category</a><br>
-    <a href="{{ url_for('add_expense') }}">Add Expense</a><br>
-    <a href="{{ url_for('expenses_view') }}">View Expenses</a><br>
+    <a href="{{ url_for('add_expense') }}">Add expense</a><br>
+    <a href="{{ url_for('expenses_view') }}">View expenses</a><br>
+    <a href="{{ url_for('income_manager') }}">Income</a><br>
     <a href="{{ url_for('manage_budget') }}">Budget</a><br>
+    <a href="{{ url_for('shared_expenses_manager') }}">Split expenses</a><br>
     <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 </body>

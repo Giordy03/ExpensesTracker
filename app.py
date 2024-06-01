@@ -23,6 +23,10 @@ login_manager.login_view = 'login'
 EXPENSES_FILE = "expenses.json"
 CATEGORIES_FILE = "categories.json"
 BUDGET_FILE = "budget.json"
+SHARED_EXPENSES_FILE = "shared_expenses.json"
+INCOME_FILE = "income.json"
+
+possible_currency = ["¥", "€", "£", "$"]
 
 
 # Functions to read/write from/to JSON files
@@ -41,6 +45,8 @@ def read_from_file(filepath):
 expenses = read_from_file(EXPENSES_FILE)
 categories = read_from_file(CATEGORIES_FILE)
 budgets = read_from_file(BUDGET_FILE)
+shared_expenses = read_from_file(SHARED_EXPENSES_FILE)
+income = read_from_file(INCOME_FILE)
 
 
 class User(db.Model, UserMixin):
@@ -68,16 +74,17 @@ class LoginForm(FlaskForm):
 
 class CategoryForm(FlaskForm):
     name = StringField(validators=[InputRequired(), Length(min=1, max=20)], render_kw={"placeholder": "Category Name"})
-    submit = SubmitField("Add Category")
+    submit = SubmitField("Add category")
 
 
 class ExpenseForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
     description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
                               render_kw={"placeholder": "Description"})
+    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
     date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
     category = SelectField("category", choices=[], validators=[InputRequired()])
-    submit = SubmitField("Add Expense")
+    submit = SubmitField("Add expense")
 
 
 class BudgetForm(FlaskForm):
@@ -90,7 +97,30 @@ class FilterForm(FlaskForm):
     start_date = DateField("Start date", format="%Y-%m-%d", validators=[Optional()])
     end_date = DateField("End date", format="%Y-%m-%d", validators=[Optional()])
     submit = SubmitField("Filter")
+    
+    
+class SharedExpensesFriendForm(FlaskForm):
+    friends = StringField("Friend", validators=[InputRequired()], render_kw={"placeholder": "Friend"})
+    submit = SubmitField("Add friend")
 
+
+class SharedExpenseForm(FlaskForm):
+    amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
+    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
+    category = SelectField("category", choices=[], validators=[InputRequired()])
+    paid_by = SelectField("Paid by", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Paid by"})
+    submit = SubmitField("Add expense")
+    
+    
+class IncomeForm(FlaskForm):
+    amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
+    description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
+                              render_kw={"placeholder": "Description"})
+    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
+    submit = SubmitField("Add income")
+    
     
 @login_manager.user_loader
 def load_user(user_id):
@@ -139,6 +169,7 @@ def dashboard():
                            user_budget=user_budget, monthly_expenses=monthly_expenses,
                            remaining_budget=remaining_budget,
                            average_expense_remaining_days=average_expense_remaining_days)
+
 
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
@@ -190,6 +221,7 @@ def add_expense():
     form_category = CategoryForm()
     existing_categories = categories.get(str(current_user.id), [])
     form = ExpenseForm()
+    form.currency.choices = [(curr, curr) for curr in possible_currency]
     form.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
     if form_category.validate_on_submit():
         new_category = form_category.name.data
@@ -211,10 +243,11 @@ def add_expense():
     
     if form.validate_on_submit():
         if str(current_user.id) not in expenses:
-            expenses[str(current_user.id)] = []
+            expenses[str(current_user.id)] = list()
         expense_data = {
             "id": len(expenses[str(current_user.id)]) + 1,
             "amount": form.amount.data,
+            "currency": form.currency.data,
             "description": form.description.data,
             "date": form.date.data.strftime("%Y-%m-%d"),
             "category": form.category.data
@@ -222,7 +255,13 @@ def add_expense():
         expenses[str(current_user.id)].append(expense_data)
         write_to_file(EXPENSES_FILE, expenses)
         return redirect(url_for("dashboard"))
+# <<<<<<< HEAD
     return render_template("add_expense.html", form=form, form_cat=form_category, categories=existing_categories)
+# =======
+#     else:
+#         print(form.errors)
+#     return render_template("add_expense.html", form=form)
+# >>>>>>> WorkingBranch
 
 
 @app.route("/expenses", methods=["GET", "POST"])
@@ -250,6 +289,29 @@ def expenses_view():
         write_to_file(EXPENSES_FILE, user_expenses)
         flash(f"The expense has been deleted successfully")
     return render_template("expenses.html", form=form, expenses=user_expenses)
+
+
+@app.route("/income", methods=["GET", "POST"])
+@login_required
+def income_manager():
+    form = IncomeForm()
+    form.currency.choices = [(curr, curr) for curr in possible_currency]
+    if form.validate_on_submit():
+        if str(current_user.id) not in income:
+            income[str(current_user.id)] = list()
+        income_data = {
+            "amount": form.amount.data,
+            "currency": form.currency.data,
+            "description": form.description.data,
+            "date": form.date.data.strftime("%Y-%m-%d")
+        }
+        income[str(current_user.id)].append(income_data)
+        write_to_file(INCOME_FILE, income)
+        return redirect(url_for("dashboard"))
+    else:
+        print(form.errors)
+        user_income = income.get(str(current_user.id), list())
+        return render_template("income.html", form=form, income=user_income)
 
 
 @app.route("/budget", methods=["GET", "POST"])
@@ -300,6 +362,113 @@ def calculate_monthly_expenses(user_id):
     total_remaining_budget = remaining_budget.get(f"{datetime.now().month}-{datetime.now().year}", 0)
     average_expense_per_day = total_remaining_budget / days_remaining if days_remaining > 0 else 0
     return monthly_expenses, remaining_budget, average_expense_per_day
+
+
+@app.route("/shared", methods=["GET", "POST"])
+@login_required
+def shared_expenses_manager():
+    form_friends = SharedExpensesFriendForm()
+    form_expenses = SharedExpenseForm()
+
+    user_shared_expenses = shared_expenses.get(str(current_user.id), [])
+    friends = [item["friend"] for item in user_shared_expenses if "friend" in item]
+
+    form_expenses.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
+    form_expenses.currency.choices = [(curr, curr) for curr in possible_currency]
+    form_expenses.paid_by.choices = [(friend, friend) for friend in friends]
+    
+    if form_friends.validate_on_submit():
+        new_friend = form_friends.friends.data
+        if str(current_user.id) not in shared_expenses:
+            shared_expenses[str(current_user.id)] = []
+        shared_expenses[str(current_user.id)].append({"friend": new_friend})
+        write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
+        flash(f"New friend: {new_friend} added successfully")
+        return redirect(url_for("shared_expenses_manager"))
+
+    if form_expenses.validate_on_submit():
+        expense_data = {
+            "amount": form_expenses.amount.data,
+            "currency": form_expenses.currency.data,
+            "paid_by": form_expenses.paid_by.data,
+            "date": form_expenses.date.data.strftime("%Y-%m-%d"),
+            "category": form_expenses.category.data
+        }
+        shared_expenses[str(current_user.id)].append(expense_data)
+        write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
+        flash("Shared expense added successfully")
+        return redirect(url_for("shared_expenses_manager"))
+    
+    friend_total = calculate_total_expenses(user_shared_expenses)
+    balance = split_expense(friend_total)
+    transactions = calculate_settlements(balance)
+    return render_template("shared_expenses.html", form_friends=form_friends, form_expenses=form_expenses,
+                           friends=friends, shared_expenses=user_shared_expenses, friend_total=friend_total,
+                           balance=balance, transactions=transactions)
+
+
+@app.route("/clear_shared", methods=["GET", "POST"])
+@login_required
+def clear_shared_expenses():
+    user_id = str(current_user.id)
+    if user_id in shared_expenses:
+        shared_expenses[user_id] = list()
+        write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
+        flash("All friends and expenses have been cleared")
+    else:
+        print("ciao")
+    return redirect(url_for("shared_expenses_manager"))
+
+
+def calculate_total_expenses(shared_expenses):
+    friend_total = dict()
+    for expense in shared_expenses:
+        if "friend" not in expense:
+            paid_by = expense["paid_by"]
+            amount = float(expense["amount"])
+            if paid_by in friend_total:
+                friend_total[paid_by] += amount
+            else:
+                friend_total[paid_by] = amount
+    return friend_total
+    
+    
+def split_expense(friend_total):
+    gran_total = 0
+    for friend, total in friend_total.items():
+        gran_total += total
+    numb_friends = len(friend_total)
+    spent_each_friend = gran_total / numb_friends
+    to_receive_to_send = dict()
+    for friend, total in friend_total.items():
+        print(f"friend: {friend} - paid = {total}")
+        print(f"{gran_total - total}", end="\n")
+        to_receive_to_send[friend] = spent_each_friend - total
+    return to_receive_to_send
+
+
+def calculate_settlements(to_receive_to_send):
+    payments = list()
+    positive_balances = list()
+    negative_balances = list()
+    for friend, balance in to_receive_to_send.items():
+        if balance > 0:
+            positive_balances.append((friend, balance))
+        elif balance < 0:
+            negative_balances.append((friend, -balance))
+    while positive_balances and negative_balances:
+        payee, amount_to_receive = positive_balances.pop()
+        payer, amount_to_pay = negative_balances.pop()
+        
+        amount = min(amount_to_receive, amount_to_pay)
+        payments.append((payer, payee, amount))
+        amount_to_receive -= amount
+        amount_to_pay -= amount
+        if amount_to_receive > 0:
+            positive_balances.append((payee, amount_to_receive))
+        if amount_to_pay > 0:
+            negative_balances.append((payer, amount_to_pay))
+    return payments
 
 
 @app.template_filter("absolute")

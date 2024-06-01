@@ -30,7 +30,8 @@
     <h2>Add expense</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
-        {{ form.amount.label }} {{ form.amount }}¥
+        {{ form.amount.label }} {{ form.amount }}
+        {{ form.currency.label }} {{ form.currency }}
         {{ form.description.label }} {{ form.description }}
         {{ form.date.label }} {{ form.date(class="datepicker", placeholder="DD-MM-YYYY") }}
         {{ form.category.label }} {{ form.category }}
