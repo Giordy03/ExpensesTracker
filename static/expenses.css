@@ -23,33 +23,17 @@ body {
     align-items: center;
 }
 
-/* Heading styles */
-h1, h2 {
-    color: #333;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-h1 {
-    font-size: 24px;
-}
-
-h2 {
-    font-size: 20px;
-}
-
-/* Form styles */
+/* Styles for form elements */
 form {
     display: flex;
     flex-direction: column;
-    /*align-items: flex-start;*/
+    align-items: flex-start;
     gap: 10px;
     margin-bottom: 20px;
     width: 100%;
 }
 
 form label {
-    align-self: flex-start;
     font-size: 18px;
     color: #666;
     width: 100%;
@@ -57,13 +41,21 @@ form label {
 }
 
 form input, form select {
-    align-self: flex-start;
     padding: 8px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 4px;
     width: 100%;
     max-width: 300px;
+    box-sizing: border-box;
+}
+
+input[type="text"] {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -76,36 +68,62 @@ input[type="submit"] {
     color: white;
     cursor: pointer;
     align-self: center;
-    justify-self: center;
 }
 
 input[type="submit"]:hover {
     background-color: #45a049;
 }
 
-/* List styles */
-ul {
-    align-self: flex-start;
-    list-style-type: circle;
-    padding: 0;
-    width: 100%;
-    max-width: 500px;
-}
-
-li {
-    background-color: #f9f9f9;
-    margin: 10px 0;
-    padding: 10px;
+/* New styles for delete button */
+button.delete-button {
+    padding: 5px 10px;
+    margin-left: 10px;
+    border: none;
     border-radius: 4px;
-    border: 1px solid #ddd;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+button.delete-button:hover {
+    background-color: #45a049;
+}
+
+/* Styles for headings */
+h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 20px;
+    margin-top: 30px;
+    color: #333;
+}
+
+/* Styles for list */
+ul {
+    list-style-type: none;
+    padding: 0;
+    list-style-position: inside;
     text-align: left;
+    width: 100%;
 }
 
-li:hover {
-    background-color: #f1f1f1;
+ul li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    list-style-position: inside;
+    list-style-type: circle;
+    align-self: flex-start;
 }
 
-/* Link styles */
+b {
+    color: #4CAF50;
+}
+
+/* Styles for links */
 a {
     font-size: 18px;
     color: #4CAF50;
@@ -117,4 +135,10 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+/* Additional styles for error messages */
+.flash {
+    color: red;
+    margin: 10px 0;
 }

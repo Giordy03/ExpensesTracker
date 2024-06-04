@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Add Expense</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='add_expenses.css') }}">
 </head>
 <body>
+    <div class="container">
     <h1>Categories</h1>
     <h2>Existing categories</h2>
     <ul>
@@ -38,5 +40,6 @@
         {{ form.submit }}
     </form>
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </div>
 </body>
 </html>

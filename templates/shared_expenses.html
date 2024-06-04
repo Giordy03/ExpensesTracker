@@ -3,10 +3,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shared Expenses</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='shared_expenses.css') }}">
 </head>
 <body>
+    <div class="container">
     <h1>Manage Shared Expenses</h1>
 
     <h2>Add Friend</h2>
@@ -77,6 +78,7 @@
     <form method="POST" action="{{ url_for('clear_shared_expenses') }}">
         <button type="submit">Clear everything</button>
     </form>
-
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </div>
 </body>
 </html>

@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Income</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='income.css') }}">
 </head>
 <body>
+    <div class="container">
     <h1>Income</h1>
 
     <h2>Add income</h2>
@@ -26,5 +28,6 @@
         {% endfor %}
     </ul>
     <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </div>
 </body>
 </html>

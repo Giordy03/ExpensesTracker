@@ -157,20 +157,17 @@ def dashboard():
         last_day_of_month = monthrange(today.year, today.month)[1]
         days_remaining = last_day_of_month - today.day + 1
         average_expense_remaining_days = remaining_budget / days_remaining
-    # user_income = sum([float(inc["amount"]) for inc in income.get(user_id, [])])
-    user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, [])])
+    user_income = sum([float(inc["amount"]) for inc in income.get(user_id, [])
+                       if inc["date"].startswith(current_month)])
+    user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, [])
+                         if exp["date"].startswith(current_month)])
     user_budget = budgets.get(user_id, 0)
-    # return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
-    #                        user_budget=user_budget, monthly_expenses=monthly_expenses,
-    #                        remaining_budget=remaining_budget,
-    #                        average_expense_remaining_days=average_expense_remaining_days)
-
-    return render_template("dashboard.html", user_expenses=user_expenses,
+    return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
                            user_budget=user_budget, monthly_expenses=monthly_expenses,
                            remaining_budget=remaining_budget,
                            average_expense_remaining_days=average_expense_remaining_days)
 
-
+    
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():

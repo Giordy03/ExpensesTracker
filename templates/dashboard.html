@@ -7,12 +7,13 @@
 </head>
 <body>
     <div class="container">
-    <h1>Welcome, {{ current_user.username }}!</h1><p>Total Income: {{ user_income }}</p>
-    <p>Total Expenses: {{ "%.2f" | format(user_expenses) }}</p>
+    <h1>Welcome, {{ current_user.username }}!</h1>
+    <p>Income of the current month: {{ "%.1f" | format(user_income) }}</p>
+    <p>Total expenses of the current month: {{ "%.2f" | format(user_expenses) }}</p>
     <p>Budget: {{ "%.2f" | format(user_budget) }}</p>
-    <p>Remaining Budget: {{ "%.2f" | format(remaining_budget) }}</p>
-    <p>Average Daily Expense to Stay Under Budget: {{ "%.2f" | format(average_expense_remaining_days) }}</p>
-    <a href="{{ url_for('add_category') }}">Category</a><br>
+    <p>Remaining budget: {{ "%.2f" | format(remaining_budget) }}</p>
+    <p>Average daily expense to stay under budget: {{ "%.2f" | format(average_expense_remaining_days) }}</p>
+{#    <a href="{{ url_for('add_category') }}">Category</a><br>#}
     <a href="{{ url_for('add_expense') }}">Add expense</a><br>
     <a href="{{ url_for('expenses_view') }}">View expenses</a><br>
     <a href="{{ url_for('income_manager') }}">Income</a><br>
