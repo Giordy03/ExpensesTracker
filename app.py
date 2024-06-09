@@ -152,16 +152,29 @@ def dashboard():
     if current_month in remaining_budget.keys():
         remaining_budget = remaining_budget[current_month]
     else:
-        remaining_budget = budgets[user_id]
+        if user_id in budgets.keys():
+            remaining_budget = budgets[user_id]
+        else:
+            remaining_budget = 0
         today = datetime.now()
         last_day_of_month = monthrange(today.year, today.month)[1]
         days_remaining = last_day_of_month - today.day + 1
         average_expense_remaining_days = remaining_budget / days_remaining
+    # if user_id in income.keys():
     user_income = sum([float(inc["amount"]) for inc in income.get(user_id, [])
                        if inc["date"].startswith(current_month)])
+    # else:
+    #     user_income = 0
     user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, [])
                          if exp["date"].startswith(current_month)])
-    user_budget = budgets.get(user_id, 0)
+    if user_id in budgets.keys():
+        user_budget = budgets.get(user_id, 0)
+    else:
+        user_budget = 0
+    # if user_id in income.keys():
+    #     user_budget = budgets.get(user_id, 0)
+    # else:
+    #     user_budget = 0
     return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
                            user_budget=user_budget, monthly_expenses=monthly_expenses,
                            remaining_budget=remaining_budget,
@@ -199,8 +212,7 @@ def add_category():
         categories[str(current_user.id)].append(new_category)
         write_to_file(CATEGORIES_FILE, categories)
         flash(f"Category '{new_category}' added successfully!")
-        return redirect(url_for("add_category"))
-    
+        return redirect(url_for("add_expense"))
     if request.method == "POST" and "delete" in request.form:
         category_to_delete = request.form.get("delete")
         if category_to_delete in existing_categories:
@@ -208,8 +220,7 @@ def add_category():
             categories[str(current_user.id)] = existing_categories
             write_to_file(CATEGORIES_FILE, categories)
             flash(f"Category {category_to_delete} has been deleted successfully")
-            
-    return render_template("add_category.html", form_cat=form_category, categories=existing_categories)
+    return redirect(url_for("add_expense"))
 
 
 @app.route("/add_expense", methods=["GET", "POST"])
@@ -254,11 +265,6 @@ def add_expense():
         return redirect(url_for("dashboard"))
 # <<<<<<< HEAD
     return render_template("add_expense.html", form=form, form_cat=form_category, categories=existing_categories)
-# =======
-#     else:
-#         print(form.errors)
-#     return render_template("add_expense.html", form=form)
-# >>>>>>> WorkingBranch
 
 
 @app.route("/expenses", methods=["GET", "POST"])
@@ -329,7 +335,6 @@ def manage_budget():
         average_daily_expense = dict()
         for date, expense in monthly_expenses.items():
             month, year = map(int, date.split("-"))
-            print(f"year: {year} - month{month}")
             if date != current_date:
                 days_in_month = monthrange(year, month)[1]
             else:
@@ -343,7 +348,10 @@ def manage_budget():
 def calculate_monthly_expenses(user_id):
     monthly_expenses = dict()
     user_expenses = expenses.get(user_id, [])
-    user_budget = budgets.get(str(user_id), 0)
+    if user_id in budgets.keys():
+        user_budget = budgets.get(str(user_id), 0)
+    else:
+        user_budget = 0
     for expense in user_expenses:
         expense_date = datetime.strptime(expense["date"], "%Y-%m-%d")
         month = expense_date.month
@@ -412,8 +420,6 @@ def clear_shared_expenses():
         shared_expenses[user_id] = list()
         write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
         flash("All friends and expenses have been cleared")
-    else:
-        print("ciao")
     return redirect(url_for("shared_expenses_manager"))
 
 
@@ -438,8 +444,6 @@ def split_expense(friend_total):
     spent_each_friend = gran_total / numb_friends
     to_receive_to_send = dict()
     for friend, total in friend_total.items():
-        print(f"friend: {friend} - paid = {total}")
-        print(f"{gran_total - total}", end="\n")
         to_receive_to_send[friend] = spent_each_friend - total
     return to_receive_to_send
 

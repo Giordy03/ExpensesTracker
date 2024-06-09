@@ -28,6 +28,16 @@ input[type="text"], input[type="password"] {
     border: 1px solid #ddd;
     border-radius: 4px;
 }
+input[type="submit"] {
+    padding: 10px 20px;
+    margin: 20px 0;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    align-self: center;
+}
 
 input[type="submit"]:hover {
     background-color: #45a049;
@@ -37,6 +47,9 @@ a {
     font-size: 18px;
     color: #4CAF50;
     text-decoration: none;
+    margin-top: 20px;
+    display: inline-block;
+    text-align: center;
 }
 
 a:hover {
