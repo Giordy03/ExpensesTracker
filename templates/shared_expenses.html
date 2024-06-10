@@ -68,7 +68,7 @@
 
     <h2>Settlement</h2>
     <ul>
-        {% for payer, payee, amount in transactions %}
+        {% for payee, payer, amount in transactions %}
         <li>
             {{ payer }} needs to pay {{ payee }}: {{ amount }}
         </li>

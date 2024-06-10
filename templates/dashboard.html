@@ -9,7 +9,7 @@
     <div class="container">
     <h1>Welcome, {{ current_user.username }}!</h1>
     <p>Income of the current month: {{ "%.1f" | format(user_income) }}</p>
-    <p>Total expenses of the current month: {{ "%.2f" | format(user_expenses) }}</p>
+    <p>Total expenses of the current month: {{ "%.2f" | format(monthly_expenses) }}</p>
     <p>Budget: {{ "%.2f" | format(user_budget) }}</p>
     <p>Remaining budget: {{ "%.2f" | format(remaining_budget) }}</p>
     <p>Average daily expense to stay under budget: {{ "%.2f" | format(average_expense_remaining_days) }}</p>

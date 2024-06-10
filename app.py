@@ -39,9 +39,10 @@ def read_from_file(filepath):
     if os.path.exists(filepath):
         with open(filepath, "r") as file:
             return json.load(file)
-    return {}
+    return dict()
 
 
+# define the data readen from the files
 expenses = read_from_file(EXPENSES_FILE)
 categories = read_from_file(CATEGORIES_FILE)
 budgets = read_from_file(BUDGET_FILE)
@@ -50,7 +51,7 @@ income = read_from_file(INCOME_FILE)
 
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     username = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(80), nullable=False)
 
@@ -81,9 +82,9 @@ class ExpenseForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
     description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
                               render_kw={"placeholder": "Description"})
-    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    currency = SelectField("Currency", choices=list(), validators=[InputRequired()], render_kw={"placeholder": "Currency"})
     date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
-    category = SelectField("category", choices=[], validators=[InputRequired()])
+    category = SelectField("category", choices=list(), validators=[InputRequired()])
     submit = SubmitField("Add expense")
 
 
@@ -106,10 +107,10 @@ class SharedExpensesFriendForm(FlaskForm):
 
 class SharedExpenseForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
-    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    currency = SelectField("Currency", choices=list(), validators=[InputRequired()], render_kw={"placeholder": "Currency"})
     date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
-    category = SelectField("category", choices=[], validators=[InputRequired()])
-    paid_by = SelectField("Paid by", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Paid by"})
+    category = SelectField("category", choices=list(), validators=[InputRequired()])
+    paid_by = SelectField("Paid by", choices=list(), validators=[InputRequired()], render_kw={"placeholder": "Paid by"})
     submit = SubmitField("Add expense")
     
     
@@ -117,7 +118,8 @@ class IncomeForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
     description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
                               render_kw={"placeholder": "Description"})
-    currency = SelectField("Currency", choices=[], validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    currency = SelectField("Currency", choices=list(), validators=[InputRequired()],
+                           render_kw={"placeholder": "Currency"})
     date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
     submit = SubmitField("Add income")
     
@@ -149,38 +151,46 @@ def dashboard():
     user_id = str(current_user.id)
     monthly_expenses, remaining_budget, average_expense_remaining_days = calculate_monthly_expenses(user_id)
     current_month = f"{datetime.now().month}-{datetime.now().year}"
+    current_month_income = datetime.now().strftime("%Y-%m")
+   
     if current_month in remaining_budget.keys():
+        print("1")
         remaining_budget = remaining_budget[current_month]
+        monthly_expenses = monthly_expenses[current_month]
+    elif user_id in budgets.keys():
+        print("2")
+        remaining_budget = budgets[user_id]
+        monthly_expenses = 0
     else:
-        if user_id in budgets.keys():
-            remaining_budget = budgets[user_id]
-        else:
-            remaining_budget = 0
-        today = datetime.now()
-        last_day_of_month = monthrange(today.year, today.month)[1]
-        days_remaining = last_day_of_month - today.day + 1
-        average_expense_remaining_days = remaining_budget / days_remaining
-    # if user_id in income.keys():
-    user_income = sum([float(inc["amount"]) for inc in income.get(user_id, [])
-                       if inc["date"].startswith(current_month)])
-    # else:
-    #     user_income = 0
-    user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, [])
+        print("3")
+        remaining_budget = 0
+        monthly_expenses = monthly_expenses[current_month]
+    today = datetime.now()
+    last_day_of_month = monthrange(today.year, today.month)[1]
+    days_remaining = last_day_of_month - today.day + 1
+    average_expense_remaining_days = remaining_budget / days_remaining
+    
+    if user_id in income.keys():
+        print(f"incomes: {income.get(user_id, list())}")
+        user_income = sum([float(inc["amount"]) for inc in income.get(user_id, list())
+                           if inc["date"].startswith(current_month_income)])
+        print(f"Calculated user income for current month: {user_income}")
+    else:
+        user_income = 0
+    
+    user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, list())
                          if exp["date"].startswith(current_month)])
     if user_id in budgets.keys():
         user_budget = budgets.get(user_id, 0)
     else:
         user_budget = 0
-    # if user_id in income.keys():
-    #     user_budget = budgets.get(user_id, 0)
-    # else:
-    #     user_budget = 0
+    
     return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
                            user_budget=user_budget, monthly_expenses=monthly_expenses,
                            remaining_budget=remaining_budget,
                            average_expense_remaining_days=average_expense_remaining_days)
 
-    
+
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
@@ -204,11 +214,11 @@ def register():
 @login_required
 def add_category():
     form_category = CategoryForm()
-    existing_categories = categories.get(str(current_user.id), [])
+    existing_categories = categories.get(str(current_user.id), list())
     if form_category.validate_on_submit():
         new_category = form_category.name.data
         if str(current_user.id) not in categories:
-            categories[str(current_user.id)] = []
+            categories[str(current_user.id)] = list()
         categories[str(current_user.id)].append(new_category)
         write_to_file(CATEGORIES_FILE, categories)
         flash(f"Category '{new_category}' added successfully!")
@@ -227,14 +237,14 @@ def add_category():
 @login_required
 def add_expense():
     form_category = CategoryForm()
-    existing_categories = categories.get(str(current_user.id), [])
+    existing_categories = categories.get(str(current_user.id), list())
     form = ExpenseForm()
     form.currency.choices = [(curr, curr) for curr in possible_currency]
-    form.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
+    form.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), list())]
     if form_category.validate_on_submit():
         new_category = form_category.name.data
         if str(current_user.id) not in categories:
-            categories[str(current_user.id)] = []
+            categories[str(current_user.id)] = list()
         categories[str(current_user.id)].append(new_category)
         write_to_file(CATEGORIES_FILE, categories)
         flash(f"Category '{new_category}' added successfully!")
@@ -263,7 +273,6 @@ def add_expense():
         expenses[str(current_user.id)].append(expense_data)
         write_to_file(EXPENSES_FILE, expenses)
         return redirect(url_for("dashboard"))
-# <<<<<<< HEAD
     return render_template("add_expense.html", form=form, form_cat=form_category, categories=existing_categories)
 
 
@@ -271,8 +280,8 @@ def add_expense():
 @login_required
 def expenses_view():
     form = FilterForm()
-    form.category.choices = [("None", "None")] + [(cat, cat) for cat in categories.get(str(current_user.id), [])]
-    user_expenses = expenses.get(str(current_user.id), [])
+    form.category.choices = [("None", "None")] + [(cat, cat) for cat in categories.get(str(current_user.id), list())]
+    user_expenses = expenses.get(str(current_user.id), list())
     if form.validate_on_submit():
         filer_category = form.category.data
         filter_start_date = form.start_date.data
@@ -347,7 +356,7 @@ def manage_budget():
     
 def calculate_monthly_expenses(user_id):
     monthly_expenses = dict()
-    user_expenses = expenses.get(user_id, [])
+    user_expenses = expenses.get(user_id, list())
     if user_id in budgets.keys():
         user_budget = budgets.get(str(user_id), 0)
     else:
@@ -375,17 +384,17 @@ def shared_expenses_manager():
     form_friends = SharedExpensesFriendForm()
     form_expenses = SharedExpenseForm()
 
-    user_shared_expenses = shared_expenses.get(str(current_user.id), [])
+    user_shared_expenses = shared_expenses.get(str(current_user.id), list())
     friends = [item["friend"] for item in user_shared_expenses if "friend" in item]
 
-    form_expenses.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), [])]
+    form_expenses.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), list())]
     form_expenses.currency.choices = [(curr, curr) for curr in possible_currency]
     form_expenses.paid_by.choices = [(friend, friend) for friend in friends]
     
     if form_friends.validate_on_submit():
         new_friend = form_friends.friends.data
         if str(current_user.id) not in shared_expenses:
-            shared_expenses[str(current_user.id)] = []
+            shared_expenses[str(current_user.id)] = list()
         shared_expenses[str(current_user.id)].append({"friend": new_friend})
         write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
         flash(f"New friend: {new_friend} added successfully")
@@ -423,10 +432,13 @@ def clear_shared_expenses():
     return redirect(url_for("shared_expenses_manager"))
 
 
-def calculate_total_expenses(shared_expenses):
+def calculate_total_expenses(shared_expense):
+    print(f"shared expense: {shared_expense}")
     friend_total = dict()
-    for expense in shared_expenses:
-        if "friend" not in expense:
+    for expense in shared_expense:
+        if "friend" in expense and "friend" not in friend_total:
+            friend_total[expense["friend"]] = 0
+        else:
             paid_by = expense["paid_by"]
             amount = float(expense["amount"])
             if paid_by in friend_total:
@@ -441,7 +453,8 @@ def split_expense(friend_total):
     for friend, total in friend_total.items():
         gran_total += total
     numb_friends = len(friend_total)
-    spent_each_friend = gran_total / numb_friends
+    if numb_friends != 0:
+        spent_each_friend = gran_total / numb_friends
     to_receive_to_send = dict()
     for friend, total in friend_total.items():
         to_receive_to_send[friend] = spent_each_friend - total
