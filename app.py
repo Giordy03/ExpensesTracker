@@ -82,7 +82,8 @@ class ExpenseForm(FlaskForm):
     amount = StringField(validators=[InputRequired()], render_kw={"placeholder": "Amount"})
     description = StringField(validators=[InputRequired(), Length(min=1, max=100)],
                               render_kw={"placeholder": "Description"})
-    currency = SelectField("Currency", choices=list(), validators=[InputRequired()], render_kw={"placeholder": "Currency"})
+    currency = SelectField("Currency", choices=list(), validators=[InputRequired()],
+                           render_kw={"placeholder": "Currency"})
     date = DateField("Date", format="%Y-%m-%d", validators=[InputRequired()])
     category = SelectField("category", choices=list(), validators=[InputRequired()])
     submit = SubmitField("Add expense")
