@@ -74,6 +74,21 @@ input[type="submit"]:hover {
     background-color: #45a049;
 }
 
+/* Styles for delete button */
+button.delete-button {
+    padding: 5px 10px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+button.delete-button:hover {
+    background-color: #45a049;
+}
+
 /* Styles for headings */
 h1 {
     font-size: 24px;

@@ -153,39 +153,30 @@ def dashboard():
     monthly_expenses, remaining_budget, average_expense_remaining_days = calculate_monthly_expenses(user_id)
     current_month = f"{datetime.now().month}-{datetime.now().year}"
     current_month_income = datetime.now().strftime("%Y-%m")
-   
     if current_month in remaining_budget.keys():
-        print("1")
         remaining_budget = remaining_budget[current_month]
         monthly_expenses = monthly_expenses[current_month]
     elif user_id in budgets.keys():
-        print("2")
         remaining_budget = budgets[user_id]
         monthly_expenses = 0
     else:
-        print("3")
         remaining_budget = 0
         monthly_expenses = monthly_expenses[current_month]
     today = datetime.now()
     last_day_of_month = monthrange(today.year, today.month)[1]
     days_remaining = last_day_of_month - today.day + 1
     average_expense_remaining_days = remaining_budget / days_remaining
-    
     if user_id in income.keys():
-        print(f"incomes: {income.get(user_id, list())}")
         user_income = sum([float(inc["amount"]) for inc in income.get(user_id, list())
                            if inc["date"].startswith(current_month_income)])
-        print(f"Calculated user income for current month: {user_income}")
     else:
         user_income = 0
-    
     user_expenses = sum([float(exp["amount"]) for exp in expenses.get(user_id, list())
                          if exp["date"].startswith(current_month)])
     if user_id in budgets.keys():
         user_budget = budgets.get(user_id, 0)
     else:
         user_budget = 0
-    
     return render_template("dashboard.html", user_income=user_income, user_expenses=user_expenses,
                            user_budget=user_budget, monthly_expenses=monthly_expenses,
                            remaining_budget=remaining_budget,
@@ -384,14 +375,11 @@ def calculate_monthly_expenses(user_id):
 def shared_expenses_manager():
     form_friends = SharedExpensesFriendForm()
     form_expenses = SharedExpenseForm()
-
     user_shared_expenses = shared_expenses.get(str(current_user.id), list())
     friends = [item["friend"] for item in user_shared_expenses if "friend" in item]
-
     form_expenses.category.choices = [(cat, cat) for cat in categories.get(str(current_user.id), list())]
     form_expenses.currency.choices = [(curr, curr) for curr in possible_currency]
     form_expenses.paid_by.choices = [(friend, friend) for friend in friends]
-    
     if form_friends.validate_on_submit():
         new_friend = form_friends.friends.data
         if str(current_user.id) not in shared_expenses:
@@ -400,7 +388,6 @@ def shared_expenses_manager():
         write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
         flash(f"New friend: {new_friend} added successfully")
         return redirect(url_for("shared_expenses_manager"))
-
     if form_expenses.validate_on_submit():
         expense_data = {
             "amount": form_expenses.amount.data,
@@ -413,7 +400,6 @@ def shared_expenses_manager():
         write_to_file(SHARED_EXPENSES_FILE, shared_expenses)
         flash("Shared expense added successfully")
         return redirect(url_for("shared_expenses_manager"))
-    
     friend_total = calculate_total_expenses(user_shared_expenses)
     balance = split_expense(friend_total)
     transactions = calculate_settlements(balance)
@@ -434,7 +420,6 @@ def clear_shared_expenses():
 
 
 def calculate_total_expenses(shared_expense):
-    print(f"shared expense: {shared_expense}")
     friend_total = dict()
     for expense in shared_expense:
         if "friend" in expense and "friend" not in friend_total:
@@ -474,7 +459,6 @@ def calculate_settlements(to_receive_to_send):
     while positive_balances and negative_balances:
         payee, amount_to_receive = positive_balances.pop()
         payer, amount_to_pay = negative_balances.pop()
-        
         amount = min(amount_to_receive, amount_to_pay)
         payments.append((payer, payee, amount))
         amount_to_receive -= amount
